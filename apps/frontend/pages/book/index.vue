@@ -1,125 +1,158 @@
 <template>
-  <div class="container">
-    <header class="header">
-      <button class="btn btn-create" @click="openCreateModal">เพิ่มหนังสือ</button>
-      <h1>Books</h1>
-      <button class="btn btn-logout" @click="handleLogout">Logout</button>
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <!-- Header -->
+    <header class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+      <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md w-full sm:w-auto"
+        @click="openCreateModal">
+        เพิ่มหนังสือ
+      </button>
+      <h1 class="text-2xl font-bold text-gray-800 text-center w-full sm:w-auto">Books</h1>
+      <button class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-md w-full sm:w-auto"
+        @click="handleLogout">
+        Logout
+      </button>
     </header>
 
-    <div v-if="isLoading" class="spinner-container">
-      <div class="spinner"></div>
+    <!-- Alert Modal -->
+    <div v-if="alertMessage" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+      <div class="bg-green-500 text-white px-6 py-3 rounded shadow-lg">
+        {{ alertMessage }}
+      </div>
     </div>
 
-    <div v-else>
-      <table class="table">
-        <thead>
+    <!-- Loading Spinner -->
+    <div v-if="isLoading" class="flex justify-center items-center h-40">
+      <div class="w-8 h-8 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+    </div>
+
+    <!-- Book Table -->
+    <div v-else class="overflow-x-auto">
+      <table class="min-w-full table-auto text-sm border border-gray-200 rounded-lg shadow">
+        <thead class="bg-gray-100 text-gray-700">
           <tr>
-            <th>Title</th>
-            <th>Author</th>
-            <th>Published Year</th>
-            <th>Genre</th>
-            <th>Actions</th>
+            <th class="px-4 py-2 text-left">No.</th>
+            <th class="px-4 py-2 text-left">Title</th>
+            <th class="px-4 py-2 text-left">Author</th>
+            <th class="px-4 py-2 text-left">Published Year</th>
+            <th class="px-4 py-2 text-left">Genre</th>
+            <th class="px-4 py-2 text-left">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="book in books" :key="book.id">
-            <td>{{ book.title }}</td>
-            <td>{{ book.author }}</td>
-            <td>{{ book.published_year || '-' }}</td>
-            <td>{{ book.genre || '-' }}</td>
-            <td>
-              <button @click="openDetailModal(book)" class="btn btn-view">ดูรายละเอียด</button>
-              <button @click="startEdit(book)" class="btn btn-edit">แก้ไข</button>
-              <button @click="deleteBook(book.id)" class="btn btn-delete">ลบ</button>
+          <tr v-for="book in books" :key="book.id" class="hover:bg-gray-50 border-t border-gray-200">
+            <td class="px-4 py-2">{{ book.id }}</td>
+            <td class="px-4 py-2">{{ book.title }}</td>
+            <td class="px-4 py-2">{{ book.author }}</td>
+            <td class="px-4 py-2">{{ book.published_year || '-' }}</td>
+            <td class="px-4 py-2">{{ book.genre || '-' }}</td>
+            <td class="px-4 py-2 space-x-2 min-w-[220px]">
+              <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                @click="openDetailModal(book)">ดูรายละเอียด</button>
+              <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                @click="startEdit(book)">แก้ไข</button>
+              <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                @click="openConfirmModal(book.id)">ลบ</button>
             </td>
           </tr>
         </tbody>
       </table>
 
       <!-- Pagination -->
-      <div class="pagination">
-        <button :disabled="page === 1" @click="changePage(page - 1)">ก่อนหน้า</button>
+      <div class="flex flex-wrap justify-center items-center gap-4 mt-6 text-sm">
+        <button class="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-gray-400" :disabled="page === 1"
+          @click="changePage(page - 1)">ก่อนหน้า</button>
         <span>หน้า {{ page }} / {{ totalPages }}</span>
-        <button :disabled="page === totalPages" @click="changePage(page + 1)">ถัดไป</button>
+        <button class="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-gray-400" :disabled="page === totalPages"
+          @click="changePage(page + 1)">ถัดไป</button>
       </div>
     </div>
 
-    <!-- Detail Modal -->
-    <div v-if="detailBook" class="modal-backdrop" @click.self="closeDetailModal">
-      <div class="modal modal-detail">
-        <h2>รายละเอียดหนังสือ</h2>
-        <p><strong>Title:</strong> {{ detailBook.title }}</p>
-        <p><strong>Author:</strong> {{ detailBook.author }}</p>
-        <p><strong>Published Year:</strong> {{ detailBook.published_year || '-' }}</p>
-        <p><strong>Genre:</strong> {{ detailBook.genre || '-' }}</p>
-        <button @click="closeDetailModal" class="btn btn-close">ปิด</button>
+    <!-- Confirm Delete Modal -->
+    <div v-if="showConfirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+        <h2 class="text-lg font-semibold mb-4">ยืนยันการลบ</h2>
+        <p class="mb-4 text-sm text-gray-600">คุณแน่ใจหรือไม่ว่าต้องการลบหนังสือเล่มนี้?</p>
+        <div class="flex justify-end gap-2">
+          <button @click="confirmDelete" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">ลบ</button>
+          <button @click="cancelDelete" class="bg-gray-500 text-white px-4 py-2 rounded">ยกเลิก</button>
+        </div>
       </div>
     </div>
 
-    <!-- Edit Modal -->
-    <div v-if="editingBook" class="modal-backdrop" @click.self="cancelEdit">
-      <div class="modal">
-        <h2>แก้ไขหนังสือ</h2>
-        <form @submit.prevent="submitEdit">
-          <label>
-            Title:
-            <input v-model="editingBook.title" type="text" />
-            <p v-if="errors.title" class="error-message">{{ errors.title }}</p>
-          </label>
-          <label>
-            Author:
-            <input v-model="editingBook.author" type="text" />
-            <p v-if="errors.author" class="error-message">{{ errors.author }}</p>
-          </label>
-          <label>
-            Published Year:
-            <input v-model="editingBook.published_year" type="number" min="0" />
-          </label>
-          <label>
-            Genre:
-            <input v-model="editingBook.genre" type="text" />
-          </label>
+    <!-- Modals -->
+    <div v-if="detailBook || editingBook || creatingBook"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <template v-if="detailBook">
+          <h2 class="text-xl font-semibold mb-4">รายละเอียดหนังสือ</h2>
+          <p class="mb-2"><strong>Title:</strong> {{ detailBook.title }}</p>
+          <p class="mb-2"><strong>Author:</strong> {{ detailBook.author }}</p>
+          <p class="mb-2"><strong>Published Year:</strong> {{ detailBook.published_year || '-' }}</p>
+          <p class="mb-4"><strong>Genre:</strong> {{ detailBook.genre || '-' }}</p>
+          <button class="bg-gray-600 text-white px-4 py-2 rounded w-full" @click="closeDetailModal">ปิด</button>
+        </template>
 
-          <div class="modal-actions">
-            <button type="submit" class="btn btn-save">บันทึก</button>
-            <button type="button" class="btn btn-cancel" @click="cancelEdit">ยกเลิก</button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <template v-if="editingBook">
+          <h2 class="text-xl font-semibold mb-4">แก้ไขหนังสือ</h2>
+          <form @submit.prevent="submitEdit" class="space-y-4">
+            <div>
+              <label class="block mb-1">Title</label>
+              <input v-model="editingBook.title" type="text" class="w-full border rounded px-3 py-2" />
+              <p v-if="errors.title" class="text-red-500 text-sm mt-1">{{ errors.title }}</p>
+            </div>
+            <div>
+              <label class="block mb-1">Author</label>
+              <input v-model="editingBook.author" type="text" class="w-full border rounded px-3 py-2" />
+              <p v-if="errors.author" class="text-red-500 text-sm mt-1">{{ errors.author }}</p>
+            </div>
+            <div>
+              <label class="block mb-1">Published Year</label>
+              <input v-model="editingBook.published_year" type="number" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label class="block mb-1">Genre</label>
+              <input v-model="editingBook.genre" type="text" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div class="flex justify-end gap-2">
+              <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">บันทึก</button>
+              <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded" @click="cancelEdit">ยกเลิก</button>
+            </div>
+          </form>
+        </template>
 
-    <!-- Create Modal -->
-    <div v-if="creatingBook" class="modal-backdrop" @click.self="cancelCreate">
-      <div class="modal">
-        <h2>เพิ่มหนังสือใหม่</h2>
-        <form @submit.prevent="submitCreate">
-          <label>
-            Title:
-            <input v-model="newBook.title" type="text" />
-            <p v-if="errors.title" class="error-message">{{ errors.title }}</p>
-          </label>
-          <label>
-            Author:
-            <input v-model="newBook.author" type="text" />
-            <p v-if="errors.author" class="error-message">{{ errors.author }}</p>
-          </label>
-          <label>
-            Published Year:
-            <input v-model="newBook.published_year" type="number" min="0" />
-          </label>
-          <label>
-            Genre:
-            <input v-model="newBook.genre" type="text" />
-          </label>
-          <div class="modal-actions">
-            <button type="submit" class="btn btn-save">บันทึก</button>
-            <button type="button" class="btn btn-cancel" @click="closeCreateModal">ยกเลิก</button>
-          </div>
-        </form>
+        <template v-if="creatingBook">
+          <h2 class="text-xl font-semibold mb-4">เพิ่มหนังสือใหม่</h2>
+          <form @submit.prevent="submitCreate" class="space-y-4">
+            <div>
+              <label class="block mb-1">Title</label>
+              <input v-model="newBook.title" type="text" class="w-full border rounded px-3 py-2" />
+              <p v-if="errors.title" class="text-red-500 text-sm mt-1">{{ errors.title }}</p>
+            </div>
+            <div>
+              <label class="block mb-1">Author</label>
+              <input v-model="newBook.author" type="text" class="w-full border rounded px-3 py-2" />
+              <p v-if="errors.author" class="text-red-500 text-sm mt-1">{{ errors.author }}</p>
+            </div>
+            <div>
+              <label class="block mb-1">Published Year</label>
+              <input v-model="newBook.published_year" type="number" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label class="block mb-1">Genre</label>
+              <input v-model="newBook.genre" type="text" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div class="flex justify-end gap-2">
+              <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">บันทึก</button>
+              <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded"
+                @click="closeCreateModal">ยกเลิก</button>
+            </div>
+          </form>
+        </template>
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 definePageMeta({
@@ -149,6 +182,10 @@ const totalPages = ref(1)
 const config = useRuntimeConfig()
 const router = useRouter()
 
+const showConfirmModal = ref(false)
+const pendingDeleteId = ref(null)
+const alertMessage = ref('')
+
 onMounted(async () => {
   await loadBooks()
 })
@@ -157,7 +194,7 @@ async function loadBooks() {
   isLoading.value = true
   const token = useCookie('token').value
   try {
-    const data = await $fetch(`${config.public.API_URL}/book`, {
+    const data: any = await $fetch(`${config.public.API_URL}/book`, {
       headers: { Authorization: `Bearer ${token}` },
       query: { page: page.value, limit },
     })
@@ -234,15 +271,16 @@ async function submitCreate() {
   const token = useCookie('token').value
 
   try {
-    const created = await $fetch(`${config.public.API_URL}/book`, {
+    const created: any = await $fetch(`${config.public.API_URL}/book`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: newBook.value,
     })
     books.value.push(created.result)
-    creatingBook.value = false
+    creatingBook.value = false;
+    showAlert('เพิ่มหนังสือสำเร็จ')
   } catch (err) {
-    alert('สร้างหนังสือไม่สำเร็จ')
+    showAlert('สร้างหนังสือไม่สำเร็จ')
     console.error(err)
   }
 }
@@ -266,17 +304,16 @@ async function submitEdit() {
     if (index !== -1) {
       books.value[index] = { ...editingBook.value }
     }
-    editingBook.value = null
+    editingBook.value = null;
+    showAlert('แก้ไขหนังสือสำเร็จ')
+
   } catch (err) {
-    alert('แก้ไขข้อมูลไม่สำเร็จ')
+    showAlert('แก้ไขข้อมูลไม่สำเร็จ')
     console.error(err)
   }
 }
 
 async function deleteBook(id: number) {
-  const confirmed = confirm('แน่ใจนะว่าจะลบหนังสือเล่มนี้?')
-  if (!confirmed) return
-
   const token = useCookie('token').value
   try {
     await $fetch(`${config.public.API_URL}/book/${id}`, {
@@ -284,9 +321,36 @@ async function deleteBook(id: number) {
       headers: { Authorization: `Bearer ${token}` },
     })
     books.value = books.value.filter(book => book.id !== id)
+    showAlert('ลบหนังสือสำเร็จ')
   } catch (err) {
-    alert('ลบไม่สำเร็จ')
+    showAlert('ลบหนังสือไม่สำเร็จ')
     console.error(err)
+  }
+}
+
+function showAlert(message: string) {
+  alertMessage.value = message
+  setTimeout(() => {
+    alertMessage.value = ''
+  }, 3000)
+}
+
+function openConfirmModal(id: any) {
+  pendingDeleteId.value = id
+  showConfirmModal.value = true
+}
+
+function cancelDelete() {
+  showConfirmModal.value = false
+  pendingDeleteId.value = null
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteId.value) return
+  try {
+    await deleteBook(pendingDeleteId.value)
+  } finally {
+    cancelDelete()
   }
 }
 
@@ -295,236 +359,3 @@ function handleLogout() {
   router.push('/login')
 }
 </script>
-
-<style scoped>
-.container {
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 0 20px;
-  font-family: Arial, sans-serif;
-  color: #333;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-h1 {
-  font-size: 28px;
-  margin: 0;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-
-.table th,
-.table td {
-  border: 1px solid #ddd;
-  padding: 12px 16px;
-  text-align: left;
-}
-
-.table th {
-  background-color: #f3f3f3;
-}
-
-.table tbody tr:hover {
-  background-color: #fafafa;
-}
-
-.btn {
-  padding: 6px 12px;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-  font-size: 14px;
-  text-decoration: none;
-  color: white;
-  display: inline-block;
-  user-select: none;
-}
-
-.btn-view {
-  background-color: #3b82f6;
-  margin-right: 8px;
-}
-
-.btn-view:hover {
-  background-color: #2563eb;
-}
-
-.btn-edit {
-  background-color: #f59e0b;
-  margin-right: 8px;
-}
-
-.btn-edit:hover {
-  background-color: #d97706;
-}
-
-.btn-delete {
-  background-color: #ef4444;
-}
-
-.btn-delete:hover {
-  background-color: #b91c1c;
-}
-
-.btn-logout {
-  background-color: #ef4444;
-  padding: 8px 16px;
-  font-weight: bold;
-}
-
-.btn-logout:hover {
-  background-color: #b91c1c;
-}
-
-.spinner-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 150px;
-}
-
-.spinner {
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #3b82f6;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg);}
-  100% { transform: rotate(360deg);}
-}
-
-/* Modal Styles */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0,0,0,0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
-.modal {
-  background: white;
-  padding: 20px 24px;
-  border-radius: 8px;
-  width: 400px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.25);
-  font-size: 14px;
-}
-
-.modal h2 {
-  margin-top: 0;
-  margin-bottom: 12px;
-}
-
-.modal form label {
-  display: block;
-  margin-bottom: 10px;
-}
-
-.modal form input {
-  width: 100%;
-  padding: 6px 8px;
-  font-size: 14px;
-  margin-top: 4px;
-  box-sizing: border-box;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.btn-save {
-  background-color: #10b981;
-}
-
-.btn-save:hover {
-  background-color: #059669;
-}
-
-.btn-cancel {
-  background-color: #6b7280;
-}
-
-.btn-cancel:hover {
-  background-color: #4b5563;
-}
-
-.modal-detail p {
-  margin: 8px 0;
-  line-height: 1.4;
-}
-
-.btn-close {
-  margin-top: 12px;
-  background-color: #6b7280;
-  padding: 6px 12px;
-}
-
-.btn-close:hover {
-  background-color: #4b5563;
-}
-
-.btn-create {
-  background-color: #3b82f6;
-  margin-right: 12px;
-  padding: 8px 16px;
-  font-weight: 600;
-  color: white;
-  border-radius: 6px;
-}
-
-.btn-create:hover {
-  background-color: #2563eb;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 16px;
-  gap: 12px;
-}
-
-.pagination button {
-  padding: 6px 12px;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.pagination button:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
-}
-
-.error-message {
-  color: #ef4444;
-  font-size: 12px;
-  margin-top: 4px;
-  user-select: none;
-}
-</style>

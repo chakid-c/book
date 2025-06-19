@@ -1,43 +1,44 @@
 <template>
-  <div class="min-h-screen">
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
     <div class="w-full max-w-md bg-white rounded-xl shadow-md p-8">
       <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Login</h2>
       <form @submit.prevent="handleLogin" class="space-y-4" novalidate>
         <div>
-          <label>Email <span class="text-red-500">*</span></label>
-          <input
-            v-model="email"
-            type="text"
-            placeholder="Enter your email"
-            class="input-field"
-            :class="{ 'border-red-500': emailError }"
-          />
+          <label class="block text-sm text-gray-600 mb-1">
+            Email <span class="text-red-500">*</span>
+          </label>
+          <input v-model="email" type="text" placeholder="Enter your email"
+            class="w-full px-4 py-2 border rounded-md text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            :class="{ 'border-red-500': emailError }" />
           <p v-if="emailError" class="text-red-500 text-sm mt-1">{{ emailError }}</p>
         </div>
+
         <div>
-          <label>Password <span class="text-red-500">*</span></label>
-          <input
-            v-model="password"
-            type="password"
-            placeholder="Enter your password"
-            class="input-field"
-            :class="{ 'border-red-500': passwordError }"
-          />
+          <label class="block text-sm text-gray-600 mb-1">
+            Password <span class="text-red-500">*</span>
+          </label>
+          <input v-model="password" type="password" placeholder="Enter your password"
+            class="w-full px-4 py-2 border rounded-md text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            :class="{ 'border-red-500': passwordError }" />
           <p v-if="passwordError" class="text-red-500 text-sm mt-1">{{ passwordError }}</p>
         </div>
-        <button type="submit" class="btn-primary" :disabled="isLoading">
+
+        <button type="submit"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition"
+          :disabled="isLoading">
           <span v-if="!isLoading">Sign In</span>
           <span v-else>Loading...</span>
         </button>
+
         <p v-if="error" class="text-red-500 text-sm mt-2 text-center">{{ error }}</p>
       </form>
-      <div v-if="isLoading" class="flex justify-center items-center min-h-[200px]">
-        <div class="spinner"></div>
+
+      <div v-if="isLoading" class="flex justify-center items-center mt-6">
+        <div class="w-8 h-8 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
       </div>
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRuntimeConfig } from '#imports'
@@ -108,166 +109,3 @@ async function handleLogin() {
   }
 }
 </script>
-
-<style scoped>
-.min-h-screen {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f9fafb;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-.w-full {
-  width: 100%;
-}
-
-.max-w-md {
-  max-width: 28rem; /* 448px */
-}
-
-.bg-white {
-  background-color: white;
-}
-
-.rounded-xl {
-  border-radius: 1rem;
-}
-
-.shadow-md {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.p-8 {
-  padding: 2rem;
-}
-
-.text-3xl {
-  font-size: 1.875rem;
-  line-height: 2.25rem;
-}
-
-.font-bold {
-  font-weight: 700;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-gray-800 {
-  color: #1f2937;
-}
-
-.mb-6 {
-  margin-bottom: 1.5rem;
-}
-
-.space-y-4 > * + * {
-  margin-top: 1rem;
-}
-
-label {
-  display: block;
-  margin-bottom: 0.25rem;
-  font-size: 0.875rem;
-  color: #4b5563;
-}
-
-.input-field {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  color: #1f2937;
-  font-size: 1rem;
-  outline: none;
-  transition: border-color 0.2s ease;
-  max-width: 100%;
-}
-
-.input-field::placeholder {
-  color: #9ca3af;
-}
-
-.input-field:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-}
-
-.btn-primary {
-  background-color: #2563eb;
-  color: white;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  width: 100%;
-  transition: background-color 0.2s ease;
-}
-
-.btn-primary:hover {
-  background-color: #1d4ed8;
-}
-
-.text-red-500 {
-  color: #ef4444;
-}
-
-.text-sm {
-  font-size: 0.875rem;
-}
-
-.mt-2 {
-  margin-top: 0.5rem;
-}
-
-
-@media (max-width: 640px) {
-  .max-w-md {
-    max-width: 100%;
-    padding: 1rem;
-    border-radius: 0.5rem;
-  }
-  .p-8 {
-    padding: 1.5rem;
-  }
-  .text-3xl {
-    font-size: 1.5rem;
-    line-height: 2rem;
-  }
-}
-
-@media (min-width: 641px) and (max-width: 1024px) {
-  .max-w-md {
-    max-width: 24rem;
-  }
-  .p-8 {
-    padding: 2rem;
-  }
-}
-
-@media (min-width: 1025px) {
-  .max-w-md {
-    max-width: 28rem; 
-  }
-}
-.spinner {
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #3b82f6; 
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  animation: spin 0.8s linear infinite;
-  margin: auto;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>
