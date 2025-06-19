@@ -35,7 +35,7 @@
 ### frontend
 
 ```bash
-cd front
+cd apps/front
 npm install
 cp .env.example .env
 
@@ -45,7 +45,7 @@ npm run dev
 ### Backend
 
 ```bash
-cd backend
+cd apps/backend
 npm install
 cp .env.example .env
 # แก้ค่า DB ใน .env ให้ตรงกับ local
